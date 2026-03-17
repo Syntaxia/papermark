@@ -2,7 +2,7 @@ import { render } from "@react-email/components";
 import { nanoid } from "nanoid";
 
 import prisma from "@/lib/prisma";
-import { sendEmail } from "@/lib/resend";
+import { resend, sendEmail } from "@/lib/resend";
 import { log } from "@/lib/utils";
 import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
 
