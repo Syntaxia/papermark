@@ -330,7 +330,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
         // ─── Email domain restriction (self-hosted) ───
         const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
         if (allowedDomain && user.email) {
-          const userDomain = extractEmailDomain(user.email);
+          const userDomain = extractEmailDomain(user.email)?.replace("@", "");
           if (userDomain !== allowedDomain) {
             return false;
           }
