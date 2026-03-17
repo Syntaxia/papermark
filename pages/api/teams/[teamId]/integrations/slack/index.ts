@@ -51,6 +51,10 @@ export default async function handler(
     return res.status(403).json({ error: "Access denied" });
   }
 
+  if (!getSlackEnv()) {
+    return res.status(200).json({ integration: null });
+  }
+
   switch (req.method) {
     case "GET":
       return handleGet(req, res, teamId);

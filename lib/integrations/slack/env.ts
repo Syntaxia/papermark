@@ -9,19 +9,18 @@ export const envSchema = z.object({
 
 type SlackEnv = z.infer<typeof envSchema>;
 
-let env: SlackEnv | undefined;
+let env: SlackEnv | null | undefined;
 
-export const getSlackEnv = () => {
-  if (env) {
+export const getSlackEnv = (): SlackEnv | null => {
+  if (env !== undefined) {
     return env;
   }
 
   const parsed = envSchema.safeParse(process.env);
 
   if (!parsed.success) {
-    throw new Error(
-      "Slack app environment variables are not configured properly.",
-    );
+    env = null;
+    return null;
   }
 
   env = parsed.data;
