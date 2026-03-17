@@ -63,7 +63,7 @@ accessories:
   db:
     image: postgres:17
     host: <%= `op read "op://Papermark/Server IP/ip"`.strip %>
-    port: "127.0.0.1:5432:5432"
+    port: "5432:5432"
     env:
       secret:
         - POSTGRES_USER
