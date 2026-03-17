@@ -91,6 +91,11 @@ export default function Login() {
               </div>
             </div>
           )}
+          {process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN && (
+            <div className="mx-4 mt-6 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm text-blue-700 sm:mx-12">
+              Only <strong>@{process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN}</strong> email addresses are allowed.
+            </div>
+          )}
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
             onSubmit={(e) => {

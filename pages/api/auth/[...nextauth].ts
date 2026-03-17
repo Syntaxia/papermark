@@ -13,6 +13,7 @@ import LinkedInProvider from "next-auth/providers/linkedin";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
+import { extractEmailDomain } from "@/lib/utils/email-domain";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import hanko from "@/lib/hanko";
 import { jackson } from "@/lib/jackson";
@@ -22,6 +23,9 @@ import { log } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
+const IS_PRODUCTION_HTTPS =
+  process.env.NODE_ENV === "production" ||
+  process.env.NEXTAUTH_URL?.startsWith("https://");
 
 function getMainDomainUrl(): string {
   if (process.env.NODE_ENV === "development") {
@@ -210,13 +214,13 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   cookies: {
     sessionToken: {
-      name: `${VERCEL_DEPLOYMENT ? "__Secure-" : ""}next-auth.session-token`,
+      name: `${IS_PRODUCTION_HTTPS ? "__Secure-" : ""}next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
         domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
-        secure: VERCEL_DEPLOYMENT,
+        secure: !!IS_PRODUCTION_HTTPS,
       },
     },
   },
@@ -321,6 +325,15 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             userId: user.id,
           });
           return false;
+        }
+
+        // ─── Email domain restriction (self-hosted) ───
+        const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
+        if (allowedDomain && user.email) {
+          const userDomain = extractEmailDomain(user.email);
+          if (userDomain !== allowedDomain) {
+            return false;
+          }
         }
 
         // ─── SSO Enforcement ───

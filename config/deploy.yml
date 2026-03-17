@@ -55,6 +55,8 @@ env:
     NEXT_PUBLIC_APP_BASE_HOST: dataroom.syntaxia.com
     NEXT_PUBLIC_UPLOAD_TRANSPORT: s3
     TRIGGER_API_URL: https://api.trigger.dev
+    ALLOWED_EMAIL_DOMAIN: syntaxia.com
+    NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN: syntaxia.com
 
 accessories:
   db:
