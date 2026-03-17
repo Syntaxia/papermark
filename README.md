@@ -33,6 +33,47 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 
 ![Papermark Welcome GIF](.github/images/papermark-welcome.gif)
 
+## Deployment
+
+This fork is deployed to a DigitalOcean droplet at `dataroom.syntaxia.com` using [Kamal 2](https://kamal-deploy.org/) for Docker deployment, [1Password](https://1password.com/) for secret management, and GitHub Actions for CI/CD.
+
+### Self-Hosted Infrastructure
+
+| Component | How |
+|---|---|
+| Compute | DigitalOcean droplet, Docker via Kamal |
+| Database | PostgreSQL 17 (Kamal accessory) |
+| Redis | Self-hosted Redis + [SRH](https://github.com/hiett/serverless-redis-http) (Kamal accessories) |
+| Email | SMTP via AWS SES / Nodemailer |
+| File Storage | AWS S3 (private bucket, presigned URLs) |
+| Cron Jobs | `node-cron` in-process scheduler |
+| SSL | Auto-provisioned via Kamal proxy (Let's Encrypt) |
+
+### External Dependencies (SaaS)
+
+| Service | Purpose | Required |
+|---|---|---|
+| [Tinybird](https://tinybird.co) | Document view analytics (page duration, video, clicks) | Yes |
+| [Trigger.dev](https://trigger.dev) | Background jobs (doc conversion, PDF→images, bulk downloads, video optimization) | Yes |
+| [Google Cloud](https://console.cloud.google.com) | OAuth credentials for login | Yes |
+
+### Secrets
+
+All secrets are stored in the **1Password vault "Papermark"** and fetched at deploy time via the 1Password CLI. The GitHub Actions workflow uses a service account token (`OP_SERVICE_ACCOUNT_TOKEN` repo secret) to authenticate.
+
+| Vault Item | Fields |
+|---|---|
+| Server IP | `ip` |
+| Deploy SSH Key | `private key` |
+| Database Credentials | `DB_USERNAME`, `DB_PASSWORD`, `POSTGRES_DB` |
+| Auth Credentials | `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| SMTP Credentials | `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAILER_FROM` |
+| Redis SRH | `SRH_TOKEN`, `SRH_LOCKER_TOKEN` |
+| Tinybird | `credential`, `url` |
+| Trigger.dev | `SECRET_KEY` |
+| AWS S3 | `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`, `BUCKET_NAME`, `REGION`, `DISTRIBUTION_HOST` |
+| App Secrets | `DOCUMENT_PASSWORD_KEY`, `VERIFICATION_SECRET`, `INTERNAL_API_KEY` |
+
 ## Tech Stack
 
 - [Next.js](https://nextjs.org/) – Framework
@@ -43,20 +84,17 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 - [PostgreSQL](https://www.postgresql.org/) - Database
 - [NextAuth.js](https://next-auth.js.org/) – Authentication
 - [Tinybird](https://tinybird.co) – Analytics
-- [Resend](https://resend.com) – Email
-- [Stripe](https://stripe.com) – Payments
-- [Vercel](https://vercel.com/) – Hosting
+- [Trigger.dev](https://trigger.dev) – Background Jobs
+- [AWS S3](https://aws.amazon.com/s3/) – File Storage
+- [AWS SES](https://aws.amazon.com/ses/) – Email (SMTP)
 
-## Getting Started
+## Local Development
 
 ### Prerequisites
 
-Here's what you need to run Papermark:
-
 - Node.js (version >= 18.17.0)
 - PostgreSQL Database
-- Blob storage (currently [AWS S3](https://aws.amazon.com/s3/) or [Vercel Blob](https://vercel.com/storage/blob))
-- [Resend](https://resend.com) (for sending emails)
+- SMTP credentials (for sending emails)
 
 ### 1. Clone the repository
 
