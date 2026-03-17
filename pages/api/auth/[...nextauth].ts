@@ -11,7 +11,6 @@ import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
-import { qstash } from "@/lib/cron";
 import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
@@ -271,13 +270,24 @@ export const authOptions: NextAuthOptions = {
         userId: message.user.id,
       });
 
-      await qstash.publishJSON({
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/cron/welcome-user`,
-        body: {
-          userId: message.user.id,
-        },
-        delay: 15 * 60,
-      });
+      // Send welcome email after 15 minutes delay
+      setTimeout(async () => {
+        try {
+          await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/cron/welcome-user`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: message.user.id }),
+            },
+          );
+        } catch (err) {
+          log({
+            message: `Failed to trigger welcome email for user ${message.user.id}: ${err}`,
+            type: "error",
+          });
+        }
+      }, 15 * 60 * 1000);
     },
   },
 };

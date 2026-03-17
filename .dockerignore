@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env*
+.vercel
+.trigger
+.react-email
+.vscode
+.cursor
+.agents
+.claude
+.docs
+scripts/
+changelog/
+*.md

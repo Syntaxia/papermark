@@ -7,10 +7,10 @@ const nextConfig = {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),
   },
+  output: "standalone",
   skipTrailingSlashRedirect: true,
   assetPrefix:
-    process.env.NODE_ENV === "production" &&
-    process.env.VERCEL_ENV === "production"
+    process.env.NODE_ENV === "production"
       ? process.env.NEXT_PUBLIC_BASE_URL
       : undefined,
   async redirects() {

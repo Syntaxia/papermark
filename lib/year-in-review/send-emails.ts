@@ -2,7 +2,7 @@ import { render } from "@react-email/components";
 import { nanoid } from "nanoid";
 
 import prisma from "@/lib/prisma";
-import { resend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { log } from "@/lib/utils";
 import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
 
@@ -178,50 +178,41 @@ export async function processEmailQueue() {
       );
 
       try {
-        const emailBatch = batch.map((item) => item.email);
-        const { data, error } = await resend.batch.send(emailBatch);
-
-        if (error) {
-          console.log(`❌ Batch send failed:`, error);
-        } else {
-          console.log(`✅ Batch sent successfully:`, {
-            sent: data?.data.length,
-            total: batch.length,
-          });
-        }
-
         // Track success/failure counts by job
         const jobCounts = new Map<
           string,
           { success: number; failed: number }
         >();
 
-        // Match results with metadata using array indices
-        if (data) {
-          data.data.forEach((result, index) => {
-            const metadata = batch[index];
-            const counts = jobCounts.get(metadata.jobId) || {
-              success: 0,
-              failed: 0,
-            };
+        // Send emails sequentially via SMTP
+        for (const item of batch) {
+          const counts = jobCounts.get(item.jobId) || {
+            success: 0,
+            failed: 0,
+          };
+          try {
+            await sendEmail({
+              to: item.email.to,
+              subject: item.email.subject,
+              react: item.email.react,
+              from: item.email.from,
+              unsubscribeUrl: item.email.headers["List-Unsubscribe"],
+            });
             counts.success++;
-            jobCounts.set(metadata.jobId, counts);
-          });
-        } else if (error) {
-          batch.forEach((metadata) => {
-            const counts = jobCounts.get(metadata.jobId) || {
-              success: 0,
-              failed: 0,
-            };
+          } catch (err) {
             counts.failed++;
             log({
-              message: `Failed to send email to ${metadata.email.to}: ${error.message}`,
+              message: `Failed to send email to ${item.email.to}: ${err}`,
               type: "error",
               mention: true,
             });
-            jobCounts.set(metadata.jobId, counts);
-          });
+          }
+          jobCounts.set(item.jobId, counts);
         }
+
+        console.log(`✅ Batch processed:`, {
+          total: batch.length,
+        });
 
         // Update job statuses
         for (const [jobId, counts] of jobCounts.entries()) {

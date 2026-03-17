@@ -97,6 +97,20 @@ export async function getLimits({
   const linkCount = team._count.links;
   const userCount = team._count.users + team._count.invitations;
 
+  // Self-hosted: all teams get unlimited access
+  if (process.env.SELF_HOSTED === "1") {
+    return {
+      ...DATAROOMS_PREMIUM_PLAN_LIMITS,
+      links: Infinity,
+      documents: Infinity,
+      domains: 1000,
+      datarooms: 1000,
+      users: 1000,
+      conversationsInDataroom: true,
+      usage: { documents: documentCount, links: linkCount, users: userCount },
+    };
+  }
+
   // parse the limits json with zod and return the limits
   // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
 

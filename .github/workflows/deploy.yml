@@ -1,0 +1,87 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  deploy:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://dataroom.syntaxia.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install 1Password CLI
+        run: |
+          curl -sS https://downloads.1password.com/linux/debian/amd64/stable/1password-cli-amd64-latest.deb -o /tmp/op.deb
+          sudo dpkg -i /tmp/op.deb
+
+      - name: Set up Ruby (for Kamal)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+
+      - name: Install Kamal
+        run: gem install kamal
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure SSH
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          mkdir -p ~/.ssh
+          SERVER_IP=$(op read "op://Papermark/Server IP/ip")
+          op read "op://Papermark/Deploy SSH Key/private key" > ~/.ssh/papermark_prod
+          chmod 600 ~/.ssh/papermark_prod
+          ssh-keyscan "$SERVER_IP" >> ~/.ssh/known_hosts
+          echo -e "Host $SERVER_IP\n  IdentityFile ~/.ssh/papermark_prod\n  StrictHostKeyChecking accept-new" >> ~/.ssh/config
+
+      - name: Deploy with Kamal
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: kamal deploy
+
+      - name: Boot accessories (if not running)
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          kamal accessory boot db || true
+          kamal accessory boot redis || true
+          kamal accessory boot redis-locker || true
+          kamal accessory boot srh || true
+          kamal accessory boot srh-locker || true
+
+  verify:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy]
+
+    steps:
+      - name: Health check
+        run: |
+          sleep 15
+          for i in {1..5}; do
+            if curl -sf https://dataroom.syntaxia.com/api/health; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1
