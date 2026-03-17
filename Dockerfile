@@ -24,6 +24,21 @@ ENV NEXT_PUBLIC_MARKETING_URL=$NEXT_PUBLIC_MARKETING_URL
 ENV NEXT_PUBLIC_APP_BASE_HOST=$NEXT_PUBLIC_APP_BASE_HOST
 ENV NEXT_PUBLIC_UPLOAD_TRANSPORT=$NEXT_PUBLIC_UPLOAD_TRANSPORT
 
+# Dummy build-time values for modules that throw at import during page data collection.
+# These are NEVER used at runtime — real values are injected via Kamal env at container start.
+ENV OPENAI_API_KEY=build-placeholder \
+    POSTGRES_PRISMA_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder \
+    POSTGRES_PRISMA_URL_NON_POOLING=postgresql://placeholder:placeholder@localhost:5432/placeholder \
+    UPSTASH_REDIS_REST_URL=https://placeholder.upstash.io \
+    UPSTASH_REDIS_REST_TOKEN=build-placeholder \
+    UPSTASH_REDIS_REST_LOCKER_URL=https://placeholder.upstash.io \
+    UPSTASH_REDIS_REST_LOCKER_TOKEN=build-placeholder \
+    NEXTAUTH_SECRET=build-placeholder \
+    NEXTAUTH_URL=https://placeholder.local \
+    INTERNAL_API_KEY=build-placeholder \
+    STRIPE_SECRET_KEY=sk_test_placeholder \
+    TINYBIRD_TOKEN=build-placeholder
+
 RUN npm run build
 
 # Stage 3: Production runner
