@@ -283,36 +283,40 @@ export default async function handle(
 
       // Check if the team has the dataroom change notification enabled
       if (dataroomDocument.dataroom.enableChangeNotifications) {
-        // Get all delayed and queued runs for this dataroom
-        const allRuns = await runs.list({
-          taskIdentifier: ["send-dataroom-change-notification"],
-          tag: [`dataroom_${dataroomId}`],
-          status: ["DELAYED", "QUEUED"],
-          period: "10m",
-        });
+        try {
+          // Get all delayed and queued runs for this dataroom
+          const allRuns = await runs.list({
+            taskIdentifier: ["send-dataroom-change-notification"],
+            tag: [`dataroom_${dataroomId}`],
+            status: ["DELAYED", "QUEUED"],
+            period: "10m",
+          });
 
-        // Cancel any existing unsent notification runs for this dataroom
-        await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+          // Cancel any existing unsent notification runs for this dataroom
+          await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
 
-        waitUntil(
-          sendDataroomChangeNotificationTask.trigger(
-            {
-              dataroomId,
-              dataroomDocumentId: dataroomDocument.id,
-              senderUserId: userId,
-              teamId,
-            },
-            {
-              idempotencyKey: `dataroom-notification-${teamId}-${dataroomId}-${dataroomDocument.id}`,
-              tags: [
-                `team_${teamId}`,
-                `dataroom_${dataroomId}`,
-                `document_${dataroomDocument.id}`,
-              ],
-              delay: new Date(Date.now() + 10 * 60 * 1000), // 10 minute delay
-            },
-          ),
-        );
+          waitUntil(
+            sendDataroomChangeNotificationTask.trigger(
+              {
+                dataroomId,
+                dataroomDocumentId: dataroomDocument.id,
+                senderUserId: userId,
+                teamId,
+              },
+              {
+                idempotencyKey: `dataroom-notification-${teamId}-${dataroomId}-${dataroomDocument.id}`,
+                tags: [
+                  `team_${teamId}`,
+                  `dataroom_${dataroomId}`,
+                  `document_${dataroomDocument.id}`,
+                ],
+                delay: new Date(Date.now() + 10 * 60 * 1000), // 10 minute delay
+              },
+            ),
+          );
+        } catch (error) {
+          console.error("Error sending dataroom change notification:", error);
+        }
       }
 
       return res.status(201).json(serializeFileSize(dataroomDocument));
