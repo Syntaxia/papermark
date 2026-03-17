@@ -37,7 +37,10 @@ ENV OPENAI_API_KEY=build-placeholder \
     NEXTAUTH_URL=https://placeholder.local \
     INTERNAL_API_KEY=build-placeholder \
     STRIPE_SECRET_KEY=sk_test_placeholder \
-    TINYBIRD_TOKEN=build-placeholder
+    TINYBIRD_TOKEN=build-placeholder \
+    NEXT_PRIVATE_UPLOAD_BUCKET=build-placeholder \
+    NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID=build-placeholder \
+    NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY=build-placeholder
 
 RUN npm run build
 
