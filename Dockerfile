@@ -13,6 +13,17 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# NEXT_PUBLIC_* vars must be present at build time (baked into client bundle)
+ARG NEXT_PUBLIC_BASE_URL=https://dataroom.syntaxia.com
+ARG NEXT_PUBLIC_MARKETING_URL=https://dataroom.syntaxia.com
+ARG NEXT_PUBLIC_APP_BASE_HOST=dataroom.syntaxia.com
+ARG NEXT_PUBLIC_UPLOAD_TRANSPORT=s3
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_MARKETING_URL=$NEXT_PUBLIC_MARKETING_URL
+ENV NEXT_PUBLIC_APP_BASE_HOST=$NEXT_PUBLIC_APP_BASE_HOST
+ENV NEXT_PUBLIC_UPLOAD_TRANSPORT=$NEXT_PUBLIC_UPLOAD_TRANSPORT
+
 RUN npm run build
 
 # Stage 3: Production runner
