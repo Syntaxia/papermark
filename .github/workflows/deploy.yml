@@ -51,11 +51,6 @@ jobs:
           ssh-keyscan "$SERVER_IP" >> ~/.ssh/known_hosts
           echo -e "Host $SERVER_IP\n  IdentityFile ~/.ssh/papermark_prod\n  StrictHostKeyChecking accept-new" >> ~/.ssh/config
 
-      - name: Deploy with Kamal
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: kamal deploy
-
       - name: Boot accessories (if not running)
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -65,6 +60,12 @@ jobs:
           kamal accessory boot redis-locker || true
           kamal accessory boot srh || true
           kamal accessory boot srh-locker || true
+          sleep 5
+
+      - name: Deploy with Kamal
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: kamal deploy
 
   verify:
     name: Verify Deployment
