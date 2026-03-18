@@ -324,9 +324,10 @@ export default async function handler(
       );
 
       // Revalidate the view page to pre-generate it
-      await fetch(
-        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${linkWithView.id}&hasDomain=${linkWithView.domainId ? "true" : "false"}`,
-      );
+      const { getInternalBaseUrl } = await import("@/lib/utils/base-url");
+      fetch(
+        `${getInternalBaseUrl()}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${linkWithView.id}&hasDomain=${linkWithView.domainId ? "true" : "false"}`,
+      ).catch(() => {});
 
       // Decrypt the password for the new link
       if (linkWithView.password !== null) {

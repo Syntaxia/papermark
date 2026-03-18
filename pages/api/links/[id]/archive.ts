@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { getInternalBaseUrl } from "@/lib/utils/base-url";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -60,7 +61,7 @@ export default async function handle(
       const linkTags = tags.map((t) => t.tag);
 
       await fetch(
-        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
+        `${getInternalBaseUrl()}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
       );
 
       return res.status(200).json({ ...rest, tags: linkTags });

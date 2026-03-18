@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { getInternalBaseUrl } from "@/lib/utils/base-url";
 
 export default async function handle(
   req: NextApiRequest,
@@ -81,7 +82,7 @@ export default async function handle(
     });
 
     await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
+      `${getInternalBaseUrl()}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
     );
 
     return res.status(200).json({

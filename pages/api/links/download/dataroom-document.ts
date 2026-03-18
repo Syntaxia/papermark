@@ -7,6 +7,7 @@ import { getFile } from "@/lib/files/get-file";
 import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
+import { getInternalBaseUrl } from "@/lib/utils/base-url";
 import { getIpAddress } from "@/lib/utils/ip";
 
 export const config = {
@@ -210,7 +211,7 @@ export default async function handle(
         view.link.watermarkConfig
       ) {
         const response = await fetch(
-          `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
+          `${getInternalBaseUrl()}/api/mupdf/annotate-document`,
           {
             method: "POST",
             headers: {

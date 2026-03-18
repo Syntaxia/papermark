@@ -15,6 +15,7 @@ import {
 import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { getExtension, log } from "@/lib/utils";
+import { getInternalBaseUrl } from "@/lib/utils/base-url";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
@@ -296,7 +297,7 @@ export const processDocument = async ({
 
     try {
       await fetch(
-        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${document.id}`,
+        `${getInternalBaseUrl()}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${document.id}`,
       );
     } catch (error) {
       console.error("Failed to revalidate document:", error);

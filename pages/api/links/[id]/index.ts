@@ -14,6 +14,7 @@ import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
+import { getInternalBaseUrl } from "@/lib/utils/base-url";
 import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
 
 import { DomainObject } from "..";
@@ -518,7 +519,7 @@ export default async function handle(
     }
 
     await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
+      `${getInternalBaseUrl()}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
 
     // Decrypt the password for the updated link

@@ -7,6 +7,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { getInternalBaseUrl } from "@/lib/utils/base-url";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
 export default async function handle(
@@ -104,7 +105,7 @@ export default async function handle(
       await Promise.all([documentPromise, documentVersionPromise]);
 
       await fetch(
-        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${docId}`,
+        `${getInternalBaseUrl()}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${docId}`,
       );
 
       return res.status(200).json({

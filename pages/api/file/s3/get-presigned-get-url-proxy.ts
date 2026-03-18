@@ -55,8 +55,9 @@ export default async function handler(
   }
 
   try {
+    const { getInternalBaseUrl } = await import("@/lib/utils/base-url");
     const response = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/file/s3/get-presigned-get-url`,
+      `${getInternalBaseUrl()}/api/file/s3/get-presigned-get-url`,
       {
         method: "POST",
         headers: {
