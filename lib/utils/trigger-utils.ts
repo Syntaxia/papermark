@@ -1,9 +1,6 @@
-import { BasePlan } from "../swr/use-billing";
+import { queue } from "@trigger.dev/sdk/v3";
 
-type TQueueConfig = {
-  name: string;
-  concurrencyLimit: number;
-};
+import { BasePlan } from "../swr/use-billing";
 
 const concurrencyConfig: Record<string, number> = {
   free: 1,
@@ -15,11 +12,11 @@ const concurrencyConfig: Record<string, number> = {
   "datarooms-premium": 10,
 };
 
-export const conversionQueue = (plan: string): TQueueConfig => {
+export const conversionQueue = (plan: string) => {
   const planName = plan.split("+")[0] as BasePlan;
 
-  return {
+  return queue({
     name: `conversion-${planName}`,
-    concurrencyLimit: concurrencyConfig[planName],
-  };
+    concurrencyLimit: concurrencyConfig[planName] || 10,
+  });
 };
