@@ -236,6 +236,8 @@ function prepareRemotePatterns() {
     { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
     // us special storage
     { protocol: "https", hostname: "d35vw2hoyyl88.cloudfront.net" },
+    // S3 bucket for self-hosted image uploads
+    { protocol: "https", hostname: "dataroom.syntaxia.com.s3.us-east-1.amazonaws.com" },
   ];
 
   // Default region patterns

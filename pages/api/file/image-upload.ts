@@ -1,15 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth/next";
 
+import { getS3Client } from "@/lib/files/aws-client";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../auth/[...nextauth]";
 
 const uploadConfig = {
   profile: {
-    allowedContentTypes: ["image/png", "image/jpg"],
+    allowedContentTypes: ["image/png", "image/jpg", "image/jpeg"],
     maximumSizeInBytes: 2 * 1024 * 1024, // 2MB
   },
   assets: {
@@ -25,12 +27,19 @@ const uploadConfig = {
   },
 };
 
-// logo-upload/?type= "profile" | "assets"
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const body = req.body as HandleUploadBody;
+  if (req.method !== "POST") {
+    return res.status(405).end("Method Not Allowed");
+  }
+
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return res.status(401).end("Unauthorized");
+  }
+
   const type = Array.isArray(req.query.type)
     ? req.query.type[0]
     : req.query.type;
@@ -39,51 +48,47 @@ export default async function handler(
     return res.status(400).json({ error: "Invalid upload type specified." });
   }
 
+  const { fileName, contentType } = req.body as {
+    fileName: string;
+    contentType: string;
+  };
+
+  if (!fileName || !contentType) {
+    return res
+      .status(400)
+      .json({ error: "fileName and contentType are required" });
+  }
+
+  const config = uploadConfig[type as keyof typeof uploadConfig];
+  if (!config.allowedContentTypes.includes(contentType)) {
+    return res.status(400).json({ error: "Content type not allowed" });
+  }
+
   try {
-    const jsonResponse = await handleUpload({
-      body,
-      request: req,
-      onBeforeGenerateToken: async (pathname: string) => {
-        // Generate a client token for the browser to upload the file
+    const client = getS3Client();
+    const bucket = process.env.NEXT_PRIVATE_UPLOAD_BUCKET;
+    const userId = (session.user as CustomUser).id;
+    const key = `_assets/${userId}/${Date.now()}-${fileName}`;
 
-        const session = await getServerSession(req, res, authOptions);
-        if (!session) {
-          res.status(401).end("Unauthorized");
-          throw new Error("Unauthorized");
-        }
-
-        return {
-          addRandomSuffix: true,
-          allowedContentTypes:
-            uploadConfig[type as keyof typeof uploadConfig].allowedContentTypes,
-          maximumSizeInBytes:
-            uploadConfig[type as keyof typeof uploadConfig].maximumSizeInBytes,
-          metadata: JSON.stringify({
-            // optional, sent to your server on upload completion
-            userId: (session.user as CustomUser).id,
-          }),
-        };
-      },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Get notified of browser upload completion
-        // ⚠️ This will not work on `localhost` websites,
-        // Use ngrok or similar to get the full upload flow
-
-        console.log("blob upload completed", blob, tokenPayload);
-
-        try {
-          // Run any logic after the file upload completed
-          // const { userId } = JSON.parse(tokenPayload);
-          // await db.update({ avatar: blob.url, userId });
-        } catch (error) {
-          // throw new Error("Could not update user");
-        }
-      },
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: contentType,
     });
 
-    return res.status(200).json(jsonResponse);
+    const presignedUrl = await getSignedUrl(client, command, {
+      expiresIn: 3600,
+    });
+
+    // Return the presigned URL for direct upload and the final S3 key
+    return res.status(200).json({
+      presignedUrl,
+      key,
+      bucket,
+      region: process.env.NEXT_PRIVATE_UPLOAD_REGION || "us-east-1",
+    });
   } catch (error) {
-    // The webhook will retry 5 times waiting for a 200
-    return res.status(400).json({ error: (error as Error).message });
+    console.error("Error generating presigned URL for image upload:", error);
+    return res.status(500).json({ error: "Failed to prepare upload" });
   }
 }

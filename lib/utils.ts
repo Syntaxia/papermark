@@ -519,12 +519,36 @@ export const uploadImage = async (
   file: File,
   uploadType: "profile" | "assets" = "assets",
 ) => {
-  const newBlob = await upload(file.name, file, {
-    access: "public",
-    handleUploadUrl: `/api/file/image-upload?type=${uploadType}`,
+  // Get presigned URL from our API
+  const response = await fetch(`/api/file/image-upload?type=${uploadType}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type,
+    }),
   });
 
-  return newBlob.url;
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to prepare upload");
+  }
+
+  const { presignedUrl, key, bucket, region } = await response.json();
+
+  // Upload directly to S3 using presigned URL
+  const uploadResponse = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error("Failed to upload image to S3");
+  }
+
+  // Return the S3 URL
+  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
 };
 
 /**
