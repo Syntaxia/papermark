@@ -547,8 +547,8 @@ export const uploadImage = async (
     throw new Error("Failed to upload image to S3");
   }
 
-  // Return the S3 URL
-  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  // Return path-style S3 URL (bucket names with dots break virtual-hosted SSL certs)
+  return `https://s3.${region}.amazonaws.com/${bucket}/${key}`;
 };
 
 /**
