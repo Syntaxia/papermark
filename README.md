@@ -41,20 +41,23 @@ This fork is deployed to a DigitalOcean droplet at `dataroom.syntaxia.com` using
 
 | Component | How |
 |---|---|
-| Compute | DigitalOcean droplet, Docker via Kamal |
-| Database | PostgreSQL 17 (Kamal accessory) |
-| Redis | Self-hosted Redis + [SRH](https://github.com/hiett/serverless-redis-http) (Kamal accessories) |
-| Email | SMTP via AWS SES / Nodemailer |
-| File Storage | AWS S3 (private bucket, presigned URLs) |
-| Cron Jobs | `node-cron` in-process scheduler |
+| Compute | DigitalOcean droplet (4 vCPU / 8GB RAM recommended), Docker via Kamal |
+| Database | PostgreSQL 17 (Kamal accessory, port 5432 exposed for Trigger.dev) |
+| Redis | Self-hosted Redis x2 (main + locker) + [SRH](https://github.com/hiett/serverless-redis-http) x2 (Upstash-compatible REST proxy) |
+| Email | SMTP via AWS SES / Nodemailer (replaced Resend) |
+| File Storage | AWS S3 (private bucket `dataroom.syntaxia.com`, presigned URLs, CORS configured) |
+| Cron Jobs | `node-cron` in-process scheduler via Next.js instrumentation hook (replaced QStash) |
 | SSL | Auto-provisioned via Kamal proxy (Let's Encrypt) |
+| Billing | Disabled — all users default to `datarooms-premium` plan with unlimited access |
+| Auth | Google OAuth only, restricted to `@syntaxia.com` email domain |
 
 ### External Dependencies (SaaS)
 
 | Service | Purpose | Required |
 |---|---|---|
-| [Tinybird](https://tinybird.co) | Document view analytics (page duration, video, clicks) | Yes |
-| [Trigger.dev](https://trigger.dev) | Background jobs (doc conversion, PDF→images, bulk downloads, video optimization) | Yes |
+| [Tinybird](https://tinybird.co) | Document view analytics (page duration, video, clicks). US-East region, base URL configured via `TINYBIRD_BASE_URL`. | Yes |
+| [Trigger.dev](https://trigger.dev) | Background jobs (doc conversion, PDF-to-images, bulk downloads, video optimization, AI indexing). Tasks deployed separately via CLI. | Yes |
+| [OpenAI](https://platform.openai.com) | AI document processing and indexing for dataroom agents | Optional |
 | [Google Cloud](https://console.cloud.google.com) | OAuth credentials for login | Yes |
 
 ### Secrets
@@ -70,9 +73,56 @@ All secrets are stored in the **1Password vault "Papermark"** and fetched at dep
 | SMTP Credentials | `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAILER_FROM` |
 | Redis SRH | `SRH_TOKEN`, `SRH_LOCKER_TOKEN` |
 | Tinybird | `credential`, `url` |
-| Trigger.dev | `SECRET_KEY` |
+| Trigger.dev | `SECRET_KEY`, `PROJECT_ID`, `VERSION` |
+| OpenAI Key | `credential` |
 | AWS S3 | `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`, `BUCKET_NAME`, `REGION`, `DISTRIBUTION_HOST` |
 | App Secrets | `DOCUMENT_PASSWORD_KEY`, `VERIFICATION_SECRET`, `INTERNAL_API_KEY` |
+
+### Trigger.dev Task Deployment
+
+Trigger.dev tasks run on their cloud, not on the droplet. They must be deployed separately after code changes to task files in `lib/trigger/` or `ee/features/ai/lib/trigger/`.
+
+```bash
+# Deploy tasks to production
+TRIGGER_PROJECT_ID=$(op read "op://Papermark/Trigger.dev/PROJECT_ID") \
+OPENAI_API_KEY=$(op read "op://Papermark/OpenAI Key/credential") \
+npx trigger.dev@latest deploy --env production
+```
+
+After deploying, update the version in 1Password so the app locks runs to the correct deployment:
+
+```bash
+op item edit "Trigger.dev" --vault "Papermark" "VERSION=<new-version>"
+```
+
+Then redeploy the app to pick up the new version.
+
+**Trigger.dev environment variables** (set in Trigger.dev dashboard > Settings > Environment Variables > Production):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | `postgresql://papermark:<password>@<droplet-ip>:5432/papermark` |
+| `OPENAI_API_KEY` | from 1Password |
+| `INTERNAL_API_KEY` | from 1Password |
+| `NEXT_PUBLIC_BASE_URL` | `https://dataroom.syntaxia.com` |
+| `NEXT_PRIVATE_UPLOAD_BUCKET` | `dataroom.syntaxia.com` |
+| `NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID` | from 1Password |
+| `NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY` | from 1Password |
+| `NEXT_PRIVATE_UPLOAD_REGION` | `us-east-1` |
+| `NEXT_PUBLIC_UPLOAD_TRANSPORT` | `s3` |
+
+### S3 Bucket Configuration
+
+- **Bucket**: `dataroom.syntaxia.com` in `us-east-1`
+- **Access**: Private (files served via presigned URLs, not public)
+- **CORS**: Configured to allow uploads from `https://dataroom.syntaxia.com`
+- **IAM User**: `papermark-s3` with scoped policy (GetObject, PutObject, DeleteObject, multipart)
+
+### Droplet Setup
+
+- **SSH**: `deploy` user with key-based auth (`ssh papermark` via ~/.ssh/config)
+- **Docker**: Installed, `deploy` user in docker group
+- **Firewall (ufw)**: Ports 22 (SSH), 80 (HTTP), 443 (HTTPS), 5432 (Postgres for Trigger.dev)
 
 ## Tech Stack
 
@@ -168,7 +218,7 @@ Papermark is an open-source project, and we welcome contributions from the commu
 
 If you'd like to contribute, please fork the repository and make any changes you'd like. Pull requests are warmly welcome.
 
-### Our Contributors ✨
+### Our Contributors
 
 <a href="https://github.com/mfts/papermark/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=mfts/papermark" />
