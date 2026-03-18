@@ -70,8 +70,14 @@ const getFileFromS3 = async (key: string) => {
     typeof window === "undefined" && !!process.env.INTERNAL_API_KEY;
 
   if (isServer) {
+    // Use localhost for server-to-server calls within the same container
+    const serverBaseUrl =
+      process.env.SELF_HOSTED === "1"
+        ? `http://localhost:${process.env.PORT || 3000}`
+        : process.env.NEXT_PUBLIC_BASE_URL;
+
     return fetchPresignedUrl(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-get-url`,
+      `${serverBaseUrl}/api/file/s3/get-presigned-get-url`,
       {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
