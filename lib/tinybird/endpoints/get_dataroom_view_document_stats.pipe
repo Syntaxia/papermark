@@ -14,3 +14,4 @@ SQL >
         viewId IN splitByChar(',', {{ String(viewIds, required=True) }})
     GROUP BY
         viewId, documentId
+TYPE endpoint
