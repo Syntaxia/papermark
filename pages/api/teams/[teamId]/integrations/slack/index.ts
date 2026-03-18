@@ -72,7 +72,7 @@ async function handleGet(
   res: NextApiResponse,
   teamId: string,
 ) {
-  const env = getSlackEnv();
+  const env = getSlackEnv()!;
 
   try {
     const integrationFullData = await prisma.installedIntegration.findUnique({
@@ -115,7 +115,7 @@ async function handleUpdate(
   res: NextApiResponse,
   teamId: string,
 ) {
-  const env = getSlackEnv();
+  const env = getSlackEnv()!;
   try {
     const validationResult = slackIntegrationUpdateSchema.safeParse(req.body);
 
@@ -191,7 +191,7 @@ async function handleDelete(
   res: NextApiResponse,
   teamId: string,
 ) {
-  const env = getSlackEnv();
+  const env = getSlackEnv()!;
   try {
     const integration = await prisma.installedIntegration.findUnique({
       where: {
