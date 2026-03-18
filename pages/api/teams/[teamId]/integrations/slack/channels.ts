@@ -40,6 +40,9 @@ export default async function handler(
   }
 
   const env = getSlackEnv();
+  if (!env) {
+    return res.status(200).json({ channels: [] });
+  }
 
   if (req.method === "GET") {
     try {
