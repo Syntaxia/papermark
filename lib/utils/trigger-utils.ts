@@ -1,16 +1,5 @@
-import { BasePlan } from "../swr/use-billing";
-
-const concurrencyConfig: Record<string, number> = {
-  free: 1,
-  starter: 1,
-  pro: 2,
-  business: 10,
-  datarooms: 10,
-  "datarooms-plus": 10,
-  "datarooms-premium": 10,
-};
-
-export const conversionQueue = (plan: string): string => {
-  const planName = plan.split("+")[0] as BasePlan;
-  return `conversion-${planName}`;
+export const conversionQueue = (_plan: string): undefined => {
+  // Self-hosted: use the task's default queue (defined in task definition)
+  // rather than named queues which must be pre-registered in Trigger.dev v4
+  return undefined;
 };
