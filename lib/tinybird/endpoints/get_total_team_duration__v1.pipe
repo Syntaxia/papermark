@@ -33,3 +33,4 @@ SQL >
         (SELECT unique_countries FROM get_countries) as unique_countries
 
 
+TYPE endpoint

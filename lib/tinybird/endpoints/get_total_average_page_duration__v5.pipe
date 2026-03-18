@@ -6,7 +6,7 @@ SQL >
     WITH
         DistinctDurations AS (
             SELECT versionNumber, pageNumber, viewId, SUM(duration) AS distinct_duration
-            FROM page_views__v3
+            FROM page_views
             WHERE
                 documentId = {{ String(documentId, required=true) }}
                 AND time >= {{ Int64(since, required=true) }}
@@ -18,3 +18,4 @@ SQL >
     FROM DistinctDurations
     GROUP BY versionNumber, pageNumber
     ORDER BY versionNumber ASC, pageNumber ASC
+TYPE endpoint
