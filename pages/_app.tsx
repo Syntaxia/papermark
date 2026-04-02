@@ -27,7 +27,7 @@ export default function App({
   return (
     <>
       <Head>
-        <title>Papermark | The Open Source DocSend Alternative</title>
+        <title>Syntaxia | Secure Dataroom</title>
         <meta name="theme-color" content="#000000" />
         <meta
           name="description"
@@ -36,7 +36,7 @@ export default function App({
         />
         <meta
           property="og:title"
-          content="Papermark | The Open Source DocSend Alternative"
+          content="Syntaxia | Secure Dataroom"
           key="og-title"
         />
         <meta
@@ -46,12 +46,12 @@ export default function App({
         />
         <meta
           property="og:image"
-          content="https://www.papermark.com/_static/meta-image.png"
+          content="https://dataroom.syntaxia.com/_static/meta-image.png"
           key="og-image"
         />
         <meta
           property="og:url"
-          content="https://www.papermark.com"
+          content="https://dataroom.syntaxia.com"
           key="og-url"
         />
         <meta property="og:type" content="website" />
@@ -66,7 +66,7 @@ export default function App({
         />
         <meta
           name="twitter:image"
-          content="https://www.papermark.com/_static/meta-image.png"
+          content="https://dataroom.syntaxia.com/_static/meta-image.png"
           key="tw-image"
         />
         <link rel="icon" href="/favicon.ico" key="favicon" />
