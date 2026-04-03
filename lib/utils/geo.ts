@@ -29,19 +29,23 @@ export function getGeoData(headers: {
 export function getGeoDataFromIp(ip: string | null): Geo & { continent?: string } {
   if (!ip) return LOCALHOST_GEO_DATA;
 
-  // Lazy-load to avoid build-time fs errors (geoip-lite loads .dat files on import)
-  const geoip = require("geoip-lite");
-  const geo = geoip.lookup(ip);
-  if (!geo) return LOCALHOST_GEO_DATA;
+  try {
+    // Lazy-load to avoid build-time fs errors (geoip-lite loads .dat files on import)
+    const geoip = require("geoip-lite");
+    const geo = geoip.lookup(ip);
+    if (!geo) return LOCALHOST_GEO_DATA;
 
-  return {
-    city: geo.city || undefined,
-    region: geo.region || undefined,
-    country: geo.country || undefined,
-    latitude: geo.ll?.[0]?.toString(),
-    longitude: geo.ll?.[1]?.toString(),
-    continent: undefined, // geoip-lite doesn't provide continent
-  };
+    return {
+      city: geo.city || undefined,
+      region: geo.region || undefined,
+      country: geo.country || undefined,
+      latitude: geo.ll?.[0]?.toString(),
+      longitude: geo.ll?.[1]?.toString(),
+      continent: undefined, // geoip-lite doesn't provide continent
+    };
+  } catch {
+    return LOCALHOST_GEO_DATA;
+  }
 }
 
 /**

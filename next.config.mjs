@@ -183,6 +183,8 @@ const nextConfig = {
         "./node_modules/jose/**/*",
         "./node_modules/openid-client/**/*",
       ],
+      // geoip-lite data files for self-hosted IP geolocation
+      "/*": ["./node_modules/geoip-lite/data/**/*"],
     },
     missingSuspenseWithCSRBailout: false,
   },
