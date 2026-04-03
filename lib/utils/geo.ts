@@ -27,12 +27,16 @@ export function getGeoData(headers: {
  * Used for self-hosted deployments where Vercel geo headers aren't available.
  */
 export function getGeoDataFromIp(ip: string | null): Geo & { continent?: string } {
-  if (!ip) return LOCALHOST_GEO_DATA;
+  if (!ip) {
+    console.log("[geo-debug] getGeoDataFromIp called with null/empty IP");
+    return LOCALHOST_GEO_DATA;
+  }
 
   try {
     // Lazy-load to avoid build-time fs errors (geoip-lite loads .dat files on import)
     const geoip = require("geoip-lite");
     const geo = geoip.lookup(ip);
+    console.log(`[geo-debug] IP=${ip}, lookup result=${JSON.stringify(geo)}`);
     if (!geo) return LOCALHOST_GEO_DATA;
 
     return {
@@ -55,6 +59,8 @@ export function getGeoDataFromIp(ip: string | null): Geo & { continent?: string 
 export function getClientIp(req: { headers: { get(name: string): string | null } }): string | null {
   // X-Forwarded-For is set by most reverse proxies (including Kamal proxy)
   const forwardedFor = req.headers.get("x-forwarded-for");
+  const realIpHeader = req.headers.get("x-real-ip");
+  console.log(`[geo-debug] getClientIp: x-forwarded-for=${forwardedFor}, x-real-ip=${realIpHeader}`);
   if (forwardedFor) {
     const ip = forwardedFor.split(",")[0]?.trim();
     if (ip) return ip;
