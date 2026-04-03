@@ -157,7 +157,7 @@ export default function AgreementSheet({
         const linkId = document.links[0].id;
         setData((prevData) => ({
           ...prevData,
-          link: "https://www.papermark.com/view/" + linkId,
+          link: `${window.location.origin}/view/${linkId}`,
         }));
       }
     } catch (error) {
