@@ -30,8 +30,10 @@ export function getGeoDataFromIp(ip: string | null): Geo & { continent?: string 
   if (!ip) return LOCALHOST_GEO_DATA;
 
   try {
-    // Lazy-load to avoid build-time fs errors (geoip-lite loads .dat files on import)
-    const geoip = require("geoip-lite");
+    // Use eval("require") to bypass webpack's static analysis — geoip-lite loads
+    // .dat files via fs relative to __dirname, which breaks when webpack bundles it.
+    // eslint-disable-next-line no-eval
+    const geoip = eval("require")("geoip-lite");
     const geo = geoip.lookup(ip);
     if (!geo) return LOCALHOST_GEO_DATA;
 
