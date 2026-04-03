@@ -1,5 +1,3 @@
-import geoip from "geoip-lite";
-
 import { Geo } from "../types";
 
 export function getGeoData(headers: {
@@ -31,6 +29,8 @@ export function getGeoData(headers: {
 export function getGeoDataFromIp(ip: string | null): Geo & { continent?: string } {
   if (!ip) return LOCALHOST_GEO_DATA;
 
+  // Lazy-load to avoid build-time fs errors (geoip-lite loads .dat files on import)
+  const geoip = require("geoip-lite");
   const geo = geoip.lookup(ip);
   if (!geo) return LOCALHOST_GEO_DATA;
 
