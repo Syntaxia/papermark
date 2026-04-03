@@ -112,6 +112,8 @@ export async function recordLinkView({
     city: geo.city || "Unknown",
   };
 
+  console.log(`[geo-debug] clickData country=${clickData.country} city=${clickData.city} ip=${clickData.ip_address} browser=${clickData.browser} view_id=${clickData.view_id}`);
+
   const [, ,] = await Promise.all([
     // record link view in Tinybird
     recordLinkViewTB(clickData),
