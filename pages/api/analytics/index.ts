@@ -306,6 +306,11 @@ export default async function handler(
                 },
               },
             },
+            dataroom: {
+              select: {
+                name: true,
+              },
+            },
           },
           orderBy: {
             createdAt: "desc",
@@ -346,7 +351,7 @@ export default async function handler(
               url: link.domainId
                 ? `https://${link.domainSlug}/${link.slug}`
                 : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
-              documentName: link.document?.name || "Unknown",
+              documentName: link.document?.name || link.dataroom?.name || "Unknown",
               documentId: link.documentId,
               views: link._count.views,
               avgDuration,
