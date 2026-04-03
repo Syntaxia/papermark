@@ -8,6 +8,8 @@ const nextConfig = {
     remotePatterns: prepareRemotePatterns(),
   },
   output: "standalone",
+  // geoip-lite loads .dat files via fs relative to __dirname — must not be bundled by webpack
+  serverExternalPackages: ["geoip-lite"],
   skipTrailingSlashRedirect: true,
   assetPrefix:
     process.env.NODE_ENV === "production"
@@ -183,6 +185,8 @@ const nextConfig = {
         "./node_modules/jose/**/*",
         "./node_modules/openid-client/**/*",
       ],
+      // geoip-lite data files for self-hosted geo lookups
+      "/*": ["./node_modules/geoip-lite/data/*"],
     },
     missingSuspenseWithCSRBailout: false,
   },
