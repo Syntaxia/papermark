@@ -4,7 +4,7 @@ image: papermark
 servers:
   web:
     hosts:
-      - <%= `op read "op://Papermark/Server IP/ip"`.strip %>
+      - <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip"`.strip %>
 
 proxy:
   ssl: true
@@ -64,7 +64,7 @@ env:
 accessories:
   db:
     image: postgres:17
-    host: <%= `op read "op://Papermark/Server IP/ip"`.strip %>
+    host: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip"`.strip %>
     port: "5432:5432"
     env:
       secret:
@@ -75,32 +75,32 @@ accessories:
       - data:/var/lib/postgresql/data
   redis:
     image: redis:7-alpine
-    host: <%= `op read "op://Papermark/Server IP/ip"`.strip %>
+    host: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip"`.strip %>
     cmd: redis-server --appendonly yes
     directories:
       - redis-data:/data
   redis-locker:
     image: redis:7-alpine
-    host: <%= `op read "op://Papermark/Server IP/ip"`.strip %>
+    host: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip"`.strip %>
     cmd: redis-server --appendonly yes
     directories:
       - redis-locker-data:/data
   srh:
     image: hiett/serverless-redis-http:latest
-    host: <%= `op read "op://Papermark/Server IP/ip"`.strip %>
+    host: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip"`.strip %>
     env:
       clear:
         SRH_MODE: env
         SRH_CONNECTION_STRING: redis://papermark-redis:6379
-        SRH_TOKEN: <%= `op read "op://Papermark/Redis SRH/SRH_TOKEN"`.strip %>
+        SRH_TOKEN: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Redis SRH/SRH_TOKEN"`.strip %>
   srh-locker:
     image: hiett/serverless-redis-http:latest
-    host: <%= `op read "op://Papermark/Server IP/ip"`.strip %>
+    host: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip"`.strip %>
     env:
       clear:
         SRH_MODE: env
         SRH_CONNECTION_STRING: redis://papermark-redis-locker:6379
-        SRH_TOKEN: <%= `op read "op://Papermark/Redis SRH/SRH_LOCKER_TOKEN"`.strip %>
+        SRH_TOKEN: <%= `op read "op://shxzhyefse7nv2aq4ckrtlqxte/Redis SRH/SRH_LOCKER_TOKEN"`.strip %>
 
 ssh:
   user: deploy

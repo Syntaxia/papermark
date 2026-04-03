@@ -70,8 +70,8 @@ This is a self-hosted fork of Papermark deployed at `dataroom.syntaxia.com`.
 Tasks must be deployed separately when files in `lib/trigger/` or `ee/features/ai/lib/trigger/` change:
 
 ```bash
-TRIGGER_PROJECT_ID=$(op read "op://Papermark/Trigger.dev/PROJECT_ID") \
-OPENAI_API_KEY=$(op read "op://Papermark/OpenAI Key/credential") \
+TRIGGER_PROJECT_ID=$(op read "op://shxzhyefse7nv2aq4ckrtlqxte/Trigger.dev/PROJECT_ID") \
+OPENAI_API_KEY=$(op read "op://shxzhyefse7nv2aq4ckrtlqxte/OpenAI Key/credential") \
 npx trigger.dev@latest deploy --env production
 ```
 

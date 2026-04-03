@@ -45,8 +45,8 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           mkdir -p ~/.ssh
-          SERVER_IP=$(op read "op://Papermark/Server IP/ip")
-          op read "op://Papermark/Deploy SSH Key/private key" > ~/.ssh/papermark_prod
+          SERVER_IP=$(op read "op://shxzhyefse7nv2aq4ckrtlqxte/Server IP/ip")
+          op read "op://shxzhyefse7nv2aq4ckrtlqxte/Deploy SSH Key/private key" > ~/.ssh/papermark_prod
           chmod 600 ~/.ssh/papermark_prod
           ssh-keyscan "$SERVER_IP" >> ~/.ssh/known_hosts
           echo -e "Host $SERVER_IP\n  IdentityFile ~/.ssh/papermark_prod\n  StrictHostKeyChecking accept-new" >> ~/.ssh/config
