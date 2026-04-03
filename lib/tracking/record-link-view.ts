@@ -9,7 +9,12 @@ import sendNotification from "../api/notification-helper";
 import { sendLinkViewWebhook } from "../api/views/send-webhook-event";
 import { EU_COUNTRY_CODES } from "../constants";
 import { capitalize, getDomainWithoutWWW } from "../utils";
-import { LOCALHOST_GEO_DATA, LOCALHOST_IP } from "../utils/geo";
+import {
+  LOCALHOST_GEO_DATA,
+  LOCALHOST_IP,
+  getClientIp,
+  getGeoDataFromIp,
+} from "../utils/geo";
 
 export async function recordLinkView({
   req,
@@ -40,21 +45,26 @@ export async function recordLinkView({
     return null;
   }
 
-  const ip = process.env.VERCEL === "1" ? ipAddress(req) : LOCALHOST_IP;
+  const isVercel = process.env.VERCEL === "1";
+
+  const ip = isVercel ? ipAddress(req) : (getClientIp(req) ?? LOCALHOST_IP);
 
   // get continent, region & geolocation data
   // interesting, geolocation().region is Vercel's edge region – NOT the actual region
   // so we use the x-vercel-ip-country-region or geolocation().countryRegion to get the actual region
-  const { continent, region } =
-    process.env.VERCEL === "1"
-      ? {
-          continent: req.headers.get("x-vercel-ip-continent"),
-          region: geolocation(req).countryRegion,
-        }
-      : LOCALHOST_GEO_DATA;
+  const selfHostedGeo = isVercel ? null : getGeoDataFromIp(ip ?? null);
 
-  const geo =
-    process.env.VERCEL === "1" ? geolocation(req) : LOCALHOST_GEO_DATA;
+  const { continent, region } = isVercel
+    ? {
+        continent: req.headers.get("x-vercel-ip-continent"),
+        region: geolocation(req).countryRegion,
+      }
+    : {
+        continent: selfHostedGeo?.continent || null,
+        region: selfHostedGeo?.region,
+      };
+
+  const geo = isVercel ? geolocation(req) : selfHostedGeo!;
 
   const isEuCountry = geo.country && EU_COUNTRY_CODES.includes(geo.country);
 

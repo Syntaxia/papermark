@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import { redis } from "@/lib/redis";
 
-import { LOCALHOST_IP } from "../utils/geo";
+import { LOCALHOST_IP, getClientIp } from "../utils/geo";
 import { getIpAddress } from "../utils/ip";
 
 const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
@@ -165,7 +165,7 @@ async function verifyDataroomSession(
         return null;
       }
     } else {
-      const ipAddressValue = normalizeIp(ipAddress(request) ?? LOCALHOST_IP);
+      const ipAddressValue = normalizeIp(ipAddress(request) ?? getClientIp(request) ?? LOCALHOST_IP);
       if (ipAddressValue !== sessionData.ipAddress) {
         await redis.del(`dataroom_session:${sessionToken}`);
         return null;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ipAddress, waitUntil } from "@vercel/functions";
+import { getClientIp } from "@/lib/utils/geo";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
@@ -91,7 +92,7 @@ export async function POST(
     }
 
     // Additional IP-based rate limit (10 per minute) to prevent abuse across different emails
-    const ipAddressValue = ipAddress(req);
+    const ipAddressValue = ipAddress(req) ?? getClientIp(req);
     const { success } = await ratelimit(10, "1 m").limit(
       `workflow-otp:${ipAddressValue}`,
     );
